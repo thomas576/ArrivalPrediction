@@ -41,7 +41,10 @@ namespace ArrivalPrediction
 			{
 				if (((JArray)item[@"modes"]).Where(j => (string)j == @"tube").Count() > 0)
 				{
-					ReferenceData.AllStopPoints.Add((string)item[@"naptanId"], new StopPoint() { Id = (string)item[@"naptanId"], Name = (string)item[@"commonName"] });
+					StopPoint stop = new StopPoint();
+					stop.Id = (string)item[@"naptanId"];
+					stop.Name = (string)item[@"commonName"];
+					ReferenceData.AllStopPoints.Add((string)item[@"naptanId"], stop);
 				}
 			}
 		}

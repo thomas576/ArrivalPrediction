@@ -43,6 +43,7 @@ namespace ArrivalPrediction.Tests
 			};
 			Line l = ReferenceData.TryFindLine(@"jubilee");
 			IEnumerable<ArrivalPrediction> returnedList = new ArrivalPredictionDataMapper(tflConnectionSettings).GetAllArrivalPredictions();
+			IEnumerable<ArrivalPrediction> jubileePredictions = returnedList.Where(ap => ap.LineId == @"jubilee").OrderBy(ap => ap.TimeToStation);
 		}
 	}
 }
