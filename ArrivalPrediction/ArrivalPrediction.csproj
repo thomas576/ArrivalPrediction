@@ -46,11 +46,13 @@
     <Compile Include="AReferenceData.cs" />
     <Compile Include="ArrivalPrediction.cs" />
     <Compile Include="ArrivalPredictionDataMapper.cs" />
+    <Compile Include="GaussianDistribution.cs" />
     <Compile Include="HttpHelper.cs" />
     <Compile Include="IArrivalPredictionDataMapper.cs" />
     <Compile Include="IReferenceData.cs" />
     <Compile Include="ITflConnectionSettings.cs" />
     <Compile Include="Line.cs" />
+    <Compile Include="Point2D.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReferenceData.cs" />
     <Compile Include="StopPoint.cs" />

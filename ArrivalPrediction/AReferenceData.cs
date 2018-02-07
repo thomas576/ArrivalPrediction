@@ -13,6 +13,28 @@ namespace ArrivalPrediction
 		#endregion
 
 		#region Methods
+		public static bool operator ==(AReferenceData obj1, AReferenceData obj2)
+		{
+			if (ReferenceEquals(obj1, obj2))
+			{
+				return true;
+			}
+			if (ReferenceEquals(obj1, null))
+			{
+				return false;
+			}
+			if (ReferenceEquals(obj2, null))
+			{
+				return false;
+			}
+			return obj1.Equals(obj2);
+		}
+
+		public static bool operator !=(AReferenceData obj1, AReferenceData obj2)
+		{
+			return !(obj1 == obj2);
+		}
+
 		public bool Equals(AReferenceData other)
 		{
 			return (other == null) ? false : this.Id == other.Id;
@@ -25,7 +47,7 @@ namespace ArrivalPrediction
 
 		public override int GetHashCode()
 		{
-			return this.Id.GetHashCode();
+			return (this.Id == null) ? 0 : this.Id.GetHashCode();
 		}
 		#endregion
 	}

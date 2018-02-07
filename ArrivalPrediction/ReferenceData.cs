@@ -58,7 +58,54 @@ namespace ArrivalPrediction
 				}
 			}
 
-
+			ReferenceData.AllStopPointOrders = new HashSet<StopPointOrder>();
+			List<StopPoint> listOfStops = new List<StopPoint>();
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Stanmore Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Canons Park Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Queensbury Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Kingsbury Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Wembley Park Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Neasden Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Dollis Hill Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Willesden Green Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Kilburn Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"West Hampstead Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Finchley Road Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Swiss Cottage Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"St. John's Wood Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Baker Street Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Bond Street Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Green Park Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Westminster Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Waterloo Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Southwark Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"London Bridge Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Bermondsey Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Canada Water Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Canary Wharf Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"North Greenwich Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Canning Town Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"West Ham Underground Station").First().Value);
+			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Stratford Underground Station").First().Value);
+			for (int i = 0; i < listOfStops.Count; i++)
+			{
+				ReferenceData.AllStopPointOrders.Add(new StopPointOrder() {
+					StopPoint = listOfStops[i],
+					Line = ReferenceData.FindLine(@"jubilee"),
+					ZeroBasedOrder = i,
+					LineDirection = LineDirectionsEnum.JubileeStanmoreToStratford
+				});
+			}
+			for (int i = listOfStops.Count - 1, j = 0; i >= 0; i--, j++)
+			{
+				ReferenceData.AllStopPointOrders.Add(new StopPointOrder()
+				{
+					StopPoint = listOfStops[i],
+					Line = ReferenceData.FindLine(@"jubilee"),
+					ZeroBasedOrder = j,
+					LineDirection = LineDirectionsEnum.JubileeStratfordToStanmore
+				});
+			}
 		}
 		#endregion
 
@@ -78,6 +125,11 @@ namespace ArrivalPrediction
 			return false;
 		}
 
+		public static Line FindLine(string id)
+		{
+			return ReferenceData.AllLines[id];
+		}
+
 		public static bool TryFindStopPoint(string id, out StopPoint stop)
 		{
 			try
@@ -91,6 +143,11 @@ namespace ArrivalPrediction
 				Trace.TraceError(@"Could not find a stoppoint with key = '{0}'.", id);
 			}
 			return false;
+		}
+
+		public static StopPoint FindStopPoint(string id)
+		{
+			return ReferenceData.AllStopPoints[id];
 		}
 		#endregion
 	}
