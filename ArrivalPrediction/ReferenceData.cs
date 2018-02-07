@@ -16,8 +16,9 @@ namespace ArrivalPrediction
 		#endregion
 
 		#region Properties
-		public static Dictionary<string, Line> AllLines;
-		public static Dictionary<string, StopPoint> AllStopPoints;
+		public static Dictionary<string, Line> AllLines { get; set; }
+		public static Dictionary<string, StopPoint> AllStopPoints { get; set; }
+		public static HashSet<StopPointOrder> AllStopPointOrders { get; set; }
 		#endregion
 
 		#region Constructors
@@ -44,39 +45,52 @@ namespace ArrivalPrediction
 					StopPoint stop = new StopPoint();
 					stop.Id = (string)item[@"naptanId"];
 					stop.Name = (string)item[@"commonName"];
+					foreach (JToken lineItem in item[@"lines"])
+					{
+						Line line;
+						if (ReferenceData.AllLines.ContainsKey((string)lineItem[@"id"]) && ReferenceData.TryFindLine((string)lineItem[@"id"], out line))
+						{
+							stop.Lines.Add(line);
+							line.StopPoints.Add(stop);
+						}
+					}
 					ReferenceData.AllStopPoints.Add((string)item[@"naptanId"], stop);
 				}
 			}
+
+
 		}
 		#endregion
 
 		#region Methods
-		public static Line TryFindLine(string id)
+		public static bool TryFindLine(string id, out Line line)
 		{
-			Line l = null;
 			try
 			{
-				l = ReferenceData.AllLines[id];
+				line = ReferenceData.AllLines[id];
+				return true;
 			}
 			catch (Exception)
 			{
+				line = null;
 				Trace.TraceError(@"Could not find a line with key = '{0}'.", id);
 			}
-			return l;
+			return false;
 		}
 
-		public static StopPoint TryFindStopPoint(string id)
+		public static bool TryFindStopPoint(string id, out StopPoint stop)
 		{
-			StopPoint s = null;
 			try
 			{
-				s = ReferenceData.AllStopPoints[id];
+				stop = ReferenceData.AllStopPoints[id];
+				return true;
 			}
 			catch (Exception)
 			{
+				stop = null;
 				Trace.TraceError(@"Could not find a stoppoint with key = '{0}'.", id);
 			}
-			return s;
+			return false;
 		}
 		#endregion
 	}

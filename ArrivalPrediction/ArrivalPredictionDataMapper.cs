@@ -47,7 +47,14 @@ namespace ArrivalPrediction
 				arrivalPrediction.LineId = (string)item[@"lineId"];
 				arrivalPrediction.TimeStamp = (DateTime)item[@"timestamp"];
 				arrivalPrediction.TimeToStation = (int)(item[@"timeToStation"] ?? 0);
-				arrivalPredictionList.Add(arrivalPrediction);
+				Line line;
+				StopPoint stop;
+				if (ReferenceData.TryFindStopPoint(arrivalPrediction.StopPointId, out stop) && ReferenceData.TryFindLine(arrivalPrediction.LineId, out line))
+				{
+					arrivalPrediction.StopPoint = stop;
+					arrivalPrediction.Line = line;
+					arrivalPredictionList.Add(arrivalPrediction);
+				}
 			}
 
 			return arrivalPredictionList;

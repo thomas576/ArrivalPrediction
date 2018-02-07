@@ -41,9 +41,14 @@ namespace ArrivalPrediction.Tests
 				AppKey = @"b07dcb8449db2934ff23297f4004b0e1",
 				HttpsBaseAddress = @"https://api.tfl.gov.uk/"
 			};
-			Line l = ReferenceData.TryFindLine(@"jubilee");
-			IEnumerable<ArrivalPrediction> returnedList = new ArrivalPredictionDataMapper(tflConnectionSettings).GetAllArrivalPredictions();
-			IEnumerable<ArrivalPrediction> jubileePredictions = returnedList.Where(ap => ap.LineId == @"jubilee").OrderBy(ap => ap.TimeToStation);
+			Line l;
+			bool found = ReferenceData.TryFindLine(@"jubilee", out l);
+			foreach (StopPoint s in l.StopPoints)
+			{
+				Debug.WriteLine(s.Name);
+			}
+			//IEnumerable<ArrivalPrediction> returnedList = new ArrivalPredictionDataMapper(tflConnectionSettings).GetAllArrivalPredictions();
+			//IEnumerable<ArrivalPrediction> jubileePredictions = returnedList.Where(ap => ap.LineId == @"jubilee").OrderBy(ap => ap.TimeToStation);
 		}
 	}
 }

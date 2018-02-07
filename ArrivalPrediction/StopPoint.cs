@@ -3,19 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace ArrivalPrediction
 {
-	public class StopPoint : IReferenceData
+	[DebuggerDisplay(@"Id={Id}, Name={Name}, Lines=({Lines.Count} items)")]
+	public class StopPoint : AReferenceData
 	{
 		#region Private fields
-		private readonly IList<Line> _Lines = new List<Line>();
+		private readonly ICollection<Line> _Lines = new HashSet<Line>();
 		#endregion
 
 		#region Properties
-		public string Id { get; set; }
 		public string Name { get; set; }
-		public IList<Line> Lines
+		public ICollection<Line> Lines
 		{
 			get
 			{

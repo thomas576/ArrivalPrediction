@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AReferenceData.cs" />
     <Compile Include="ArrivalPrediction.cs" />
     <Compile Include="ArrivalPredictionDataMapper.cs" />
     <Compile Include="HttpHelper.cs" />
@@ -53,6 +54,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReferenceData.cs" />
     <Compile Include="StopPoint.cs" />
+    <Compile Include="StopPointOrder.cs" />
     <Compile Include="TflConnectionSettings.cs" />
   </ItemGroup>
   <ItemGroup>

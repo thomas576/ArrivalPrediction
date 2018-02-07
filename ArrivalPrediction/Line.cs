@@ -3,18 +3,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace ArrivalPrediction
 {
-	public class Line : IReferenceData
+	[DebuggerDisplay(@"Id={Id}, Name={Name}, StopPoints=({StopPoints.Count} items)")]
+	public class Line : AReferenceData
 	{
 		#region Private fields
-
+		private readonly ICollection<StopPoint> _StopPoints = new HashSet<StopPoint>();
 		#endregion
 
 		#region Properties
-		public string Id { get; set; }
 		public string Name { get; set; }
+		public ICollection<StopPoint> StopPoints
+		{
+			get
+			{
+				return this._StopPoints;
+			}
+		}
 		#endregion
 
 		#region Constructors
@@ -22,7 +30,12 @@ namespace ArrivalPrediction
 		#endregion
 
 		#region Methods
-
 		#endregion
+	}
+
+	public enum LineDirectionsEnum : int
+	{
+		JubileeStanmoreToStratford,
+		JubileeStratfordToStanmore
 	}
 }
