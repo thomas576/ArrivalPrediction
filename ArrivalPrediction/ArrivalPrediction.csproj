@@ -55,6 +55,7 @@
     <Compile Include="Point2D.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReferenceData.cs" />
+    <Compile Include="Route.cs" />
     <Compile Include="StopPoint.cs" />
     <Compile Include="StopPointOrder.cs" />
     <Compile Include="TflConnectionSettings.cs" />

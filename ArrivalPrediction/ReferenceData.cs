@@ -19,6 +19,7 @@ namespace ArrivalPrediction
 		public static Dictionary<string, Line> AllLines { get; set; }
 		public static Dictionary<string, StopPoint> AllStopPoints { get; set; }
 		public static HashSet<StopPointOrder> AllStopPointOrders { get; set; }
+		public static HashSet<Route> AllRoutes { get; set; }
 		#endregion
 
 		#region Constructors
@@ -58,6 +59,10 @@ namespace ArrivalPrediction
 				}
 			}
 
+			ReferenceData.AllRoutes = new HashSet<Route>();
+			ReferenceData.AllRoutes.Add(new Route() { Line = ReferenceData.FindLine(@"jubilee"), LineDirection = LineDirectionsEnum.JubileeStanmoreToStratford });
+			ReferenceData.AllRoutes.Add(new Route() { Line = ReferenceData.FindLine(@"jubilee"), LineDirection = LineDirectionsEnum.JubileeStratfordToStanmore });
+
 			ReferenceData.AllStopPointOrders = new HashSet<StopPointOrder>();
 			List<StopPoint> listOfStops = new List<StopPoint>();
 			listOfStops.Add(ReferenceData.AllStopPoints.Where(keyvalue => keyvalue.Value != null && keyvalue.Value.Name == @"Stanmore Underground Station").First().Value);
@@ -91,9 +96,8 @@ namespace ArrivalPrediction
 			{
 				ReferenceData.AllStopPointOrders.Add(new StopPointOrder() {
 					StopPoint = listOfStops[i],
-					Line = ReferenceData.FindLine(@"jubilee"),
-					ZeroBasedOrder = i,
-					LineDirection = LineDirectionsEnum.JubileeStanmoreToStratford
+					Route = ReferenceData.FindRoute(@"jubilee", LineDirectionsEnum.JubileeStanmoreToStratford),
+					ZeroBasedOrder = i
 				});
 			}
 			for (int i = listOfStops.Count - 1, j = 0; i >= 0; i--, j++)
@@ -101,10 +105,27 @@ namespace ArrivalPrediction
 				ReferenceData.AllStopPointOrders.Add(new StopPointOrder()
 				{
 					StopPoint = listOfStops[i],
-					Line = ReferenceData.FindLine(@"jubilee"),
-					ZeroBasedOrder = j,
-					LineDirection = LineDirectionsEnum.JubileeStratfordToStanmore
+					Route = ReferenceData.FindRoute(@"jubilee", LineDirectionsEnum.JubileeStratfordToStanmore),
+					ZeroBasedOrder = j
 				});
+			}
+
+			foreach (StopPoint stop in ReferenceData.AllStopPoints.Values)
+			{
+				IEnumerable<StopPointOrder> ordersForStopPoint = ReferenceData.AllStopPointOrders.Where(o => o.StopPoint == stop);
+				foreach (StopPointOrder order in ordersForStopPoint)
+				{
+					IEnumerable<StopPointOrder> allNextOrders = ReferenceData.AllStopPointOrders.Where(o => o.Route == order.Route && o.ZeroBasedOrder == order.ZeroBasedOrder + 1);
+					IEnumerable<StopPointOrder> allPreviousOrders = ReferenceData.AllStopPointOrders.Where(o => o.Route == order.Route && o.ZeroBasedOrder == order.ZeroBasedOrder - 1);
+					foreach (StopPointOrder nextOrder in allNextOrders)
+					{
+						stop.NextStopPoints.Add(nextOrder.Route, nextOrder.StopPoint);
+					}
+					foreach (StopPointOrder previousOrder in allPreviousOrders)
+					{
+						stop.PreviousStopPoints.Add(previousOrder.Route, previousOrder.StopPoint);
+					}
+				}
 			}
 		}
 		#endregion
@@ -148,6 +169,26 @@ namespace ArrivalPrediction
 		public static StopPoint FindStopPoint(string id)
 		{
 			return ReferenceData.AllStopPoints[id];
+		}
+
+		public static bool TryFindRoute(string lineId, LineDirectionsEnum lineDirection, out Route route)
+		{
+			try
+			{
+				route = ReferenceData.AllRoutes.Where(r => r.Line == ReferenceData.FindLine(lineId) && r.LineDirection == lineDirection).First();
+				return true;
+			}
+			catch (Exception)
+			{
+				route = null;
+				Trace.TraceError(@"Could not find a route with lineId = '{0}' and lineDirection = {1}.", lineId, lineDirection);
+			}
+			return false;
+		}
+
+		public static Route FindRoute(string lineId, LineDirectionsEnum lineDirection)
+		{
+			return ReferenceData.AllRoutes.Where(r => r.Line == ReferenceData.FindLine(lineId) && r.LineDirection == lineDirection).First();
 		}
 		#endregion
 	}

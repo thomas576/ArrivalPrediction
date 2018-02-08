@@ -43,16 +43,22 @@ namespace ArrivalPrediction
 				ArrivalPrediction arrivalPrediction = new ArrivalPrediction();
 				arrivalPrediction.Id = (string)item[@"id"];
 				arrivalPrediction.VehicleId = (string)item[@"vehicleId"];
-				arrivalPrediction.StopPointId = (string)item[@"naptanId"];
-				arrivalPrediction.LineId = (string)item[@"lineId"];
+				string stopPointId = (string)item[@"naptanId"];
+				string lineId = (string)item[@"lineId"];
 				arrivalPrediction.TimeStamp = (DateTime)item[@"timestamp"];
 				arrivalPrediction.TimeToStation = (int)(item[@"timeToStation"] ?? 0);
+				string destinationStopPointId = (string)item[@"destinationNaptanId"];
 				Line line;
 				StopPoint stop;
-				if (ReferenceData.TryFindStopPoint(arrivalPrediction.StopPointId, out stop) && ReferenceData.TryFindLine(arrivalPrediction.LineId, out line))
+				StopPoint destinationStop;
+				if (stopPointId != null && ReferenceData.TryFindStopPoint(stopPointId, out stop) && lineId != null && ReferenceData.TryFindLine(lineId, out line))
 				{
 					arrivalPrediction.StopPoint = stop;
 					arrivalPrediction.Line = line;
+					if (destinationStopPointId != null && ReferenceData.TryFindStopPoint(destinationStopPointId, out destinationStop))
+					{
+						arrivalPrediction.DestinationStopPoint = destinationStop;
+					}
 					arrivalPredictionList.Add(arrivalPrediction);
 				}
 			}

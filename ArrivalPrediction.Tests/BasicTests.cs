@@ -41,9 +41,9 @@ namespace ArrivalPrediction.Tests
 				AppKey = @"b07dcb8449db2934ff23297f4004b0e1",
 				HttpsBaseAddress = @"https://api.tfl.gov.uk/"
 			};
-			Line l;
-			bool found = ReferenceData.TryFindLine(@"jubilee", out l);
-			foreach (StopPoint s in l.StopPoints)
+			Line jubilee;
+			bool found = ReferenceData.TryFindLine(@"jubilee", out jubilee);
+			foreach (StopPoint s in jubilee.StopPoints)
 			{
 				Debug.WriteLine(s.Name);
 			}

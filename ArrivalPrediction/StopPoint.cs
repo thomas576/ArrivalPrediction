@@ -7,11 +7,13 @@ using System.Diagnostics;
 
 namespace ArrivalPrediction
 {
-	[DebuggerDisplay(@"Id={Id}, Name={Name}, Lines=({Lines.Count} items)")]
+	[DebuggerDisplay(@"Id={Id}, Name={Name}, Lines=({Lines.Count} items), NextStopPoints=({NextStopPoints.Count} items), PreviousStopPoints=({PreviousStopPoints.Count} items)")]
 	public class StopPoint : AReferenceData
 	{
 		#region Private fields
 		private readonly ICollection<Line> _Lines = new HashSet<Line>();
+		private readonly IDictionary<Route, StopPoint> _NextStopPoints = new Dictionary<Route, StopPoint>();
+		private readonly IDictionary<Route, StopPoint> _PreviousStopPoints = new Dictionary<Route, StopPoint>();
 		#endregion
 
 		#region Properties
@@ -21,6 +23,20 @@ namespace ArrivalPrediction
 			get
 			{
 				return this._Lines;
+			}
+		}
+		public IDictionary<Route, StopPoint> NextStopPoints
+		{
+			get
+			{
+				return this._NextStopPoints;
+			}
+		}
+		public IDictionary<Route, StopPoint> PreviousStopPoints
+		{
+			get
+			{
+				return this._PreviousStopPoints;
 			}
 		}
 		#endregion

@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace ArrivalPrediction
 {
+	[DebuggerDisplay(@"X={X}, Y={Y}")]
 	public struct Point2D
 	{
 		#region Private fields
@@ -43,6 +45,11 @@ namespace ArrivalPrediction
 			{
 				return new Point2D(x, point1.Y + ((x - point1.X)/(point2.X - point1.X)) * (point2.Y - point1.Y));
 			}
+		}
+
+		public override string ToString()
+		{
+			return string.Format(@"(x = {0}, y = {1})", this.X, this.Y);
 		}
 		#endregion
 	}

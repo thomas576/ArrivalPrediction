@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace ArrivalPrediction
 {
-	[DebuggerDisplay(@"StopPoint={StopPoint.Name}, Line={Line.Name}, LineDirection={LineDirection}, ZeroBasedOrder={ZeroBasedOrder}")]
+	[DebuggerDisplay(@"StopPoint={StopPoint.Name}, Route=(Line={Route.Line.Name}, LineDirection={Route.LineDirection}), ZeroBasedOrder={ZeroBasedOrder}")]
 	public class StopPointOrder : IEquatable<StopPointOrder>
 	{
 		#region Private fields
@@ -16,8 +16,7 @@ namespace ArrivalPrediction
 
 		#region Properties
 		public StopPoint StopPoint { get; set; }
-		public Line Line { get; set; }
-		public LineDirectionsEnum LineDirection { get; set; }
+		public Route Route { get; set; }
 		public int ZeroBasedOrder { get; set; }
 		#endregion
 
@@ -52,9 +51,8 @@ namespace ArrivalPrediction
 		{
 			return (other != null 
 					&& this.ZeroBasedOrder == other.ZeroBasedOrder 
-					&& this.LineDirection == other.LineDirection 
-					&& this.StopPoint == other.StopPoint 
-					&& this.Line == other.Line);
+					&& this.Route == other.Route
+					&& this.StopPoint == other.StopPoint);
 		}
 
 		public override bool Equals(object obj)
@@ -65,8 +63,7 @@ namespace ArrivalPrediction
 		public override int GetHashCode()
 		{
 			return ((this.StopPoint == null) ? 0 : this.StopPoint.GetHashCode())
-				+ ((this.Line == null) ? 0 : this.Line.GetHashCode())
-				+ this.LineDirection.GetHashCode()
+				+ ((this.Route == null) ? 0 : this.Route.GetHashCode())
 				+ this.ZeroBasedOrder;
 		}
 		#endregion

@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace ArrivalPrediction
 {
-	[DebuggerDisplay(@"Id={Id}, VehicleId={VehicleId}, StopPointId={StopPointId}, LineId={LineId}, TimeStamp={TimeStamp}, TimeToStation={TimeToStation}")]
+	[DebuggerDisplay(@"Id={Id}, VehicleId={VehicleId}, StopPoint={StopPoint.Name}, Line={Line.Name}, TimeToStation={TimeToStation}, DestinationStopPoint={DestinationStopPoint.Name}, TimeStamp={TimeStamp}")]
 	public class ArrivalPrediction
 	{
 		#region Private fields
@@ -16,12 +16,11 @@ namespace ArrivalPrediction
 		#region Properties
 		public string Id { get; set; }
 		public string VehicleId { get; set; }
-		public string StopPointId { get; set; }
 		public StopPoint StopPoint { get; set; }
-		public string LineId { get; set; }
 		public Line Line { get; set; }
 		public DateTime TimeStamp { get; set; }
 		public int TimeToStation { get; set; }
+		public StopPoint DestinationStopPoint { get; set; }
 		#endregion
 
 		#region Constructors
