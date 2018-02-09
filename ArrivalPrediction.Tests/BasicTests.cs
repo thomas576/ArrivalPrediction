@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
+using System.Threading;
 
 namespace ArrivalPrediction.Tests
 {
@@ -49,6 +50,23 @@ namespace ArrivalPrediction.Tests
 			}
 			//IEnumerable<ArrivalPrediction> returnedList = new ArrivalPredictionDataMapper(tflConnectionSettings).GetAllArrivalPredictions();
 			//IEnumerable<ArrivalPrediction> jubileePredictions = returnedList.Where(ap => ap.LineId == @"jubilee").OrderBy(ap => ap.TimeToStation);
+		}
+
+		[TestMethod]
+		public void TestPolling()
+		{
+			TflConnectionSettings tflConnectionSettings = new TflConnectionSettings()
+			{
+				AppId = @"24f6effc",
+				AppKey = @"b07dcb8449db2934ff23297f4004b0e1",
+				HttpsBaseAddress = @"https://api.tfl.gov.uk/"
+			};
+			ArrivalPredictionPolling polling = new ArrivalPredictionPolling(tflConnectionSettings, 55000, 10000);
+			polling.StartPollingInNewThread();
+			Thread.Sleep(240000);
+			polling.StopPollingThread();
+			Thread.Sleep(55000);
+			ArrivalPredictionRepository repo = polling.ArrivalPredictionRepository;
 		}
 	}
 }

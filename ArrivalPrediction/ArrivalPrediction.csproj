@@ -35,6 +35,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -46,6 +47,8 @@
     <Compile Include="AReferenceData.cs" />
     <Compile Include="ArrivalPrediction.cs" />
     <Compile Include="ArrivalPredictionDataMapper.cs" />
+    <Compile Include="ArrivalPredictionPolling.cs" />
+    <Compile Include="ArrivalPredictionRepository.cs" />
     <Compile Include="GaussianDistribution.cs" />
     <Compile Include="HttpHelper.cs" />
     <Compile Include="IArrivalPredictionDataMapper.cs" />

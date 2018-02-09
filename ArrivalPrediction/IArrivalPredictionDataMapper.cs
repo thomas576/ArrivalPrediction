@@ -8,6 +8,6 @@ namespace ArrivalPrediction
 {
 	public interface IArrivalPredictionDataMapper
 	{
-		IEnumerable<ArrivalPrediction> GetAllArrivalPredictions();
+		ICollection<ArrivalPrediction> GetAllArrivalPredictions();
 	}
 }

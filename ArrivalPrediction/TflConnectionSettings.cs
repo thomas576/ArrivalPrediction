@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ArrivalPrediction
 {
-	public class TflConnectionSettings : ITflConnectionSettings
+	public struct TflConnectionSettings : ITflConnectionSettings
 	{
 		#region Private fields
 

@@ -22,6 +22,21 @@ namespace ArrivalPrediction
 		#endregion
 
 		#region Methods
+		public bool CanGoFromStopToStop(StopPoint stop1, StopPoint stop2)
+		{
+			IEnumerable<StopPointOrder> stopOrdersOnRoute = ReferenceData.AllStopPointOrders.Where(o => o.Route == this);
+			if (stopOrdersOnRoute.Count() > 0)
+			{
+				StopPointOrder stop1OrderFound = stopOrdersOnRoute.Where(o => o.StopPoint == stop1).FirstOrDefault();
+				StopPointOrder stop2OrderFound = stopOrdersOnRoute.Where(o => o.StopPoint == stop2).FirstOrDefault();
+				if (stop1OrderFound != null && stop2OrderFound != null && stop1OrderFound.ZeroBasedOrder < stop2OrderFound.ZeroBasedOrder)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
 		public static bool operator ==(Route obj1, Route obj2)
 		{
 			if (ReferenceEquals(obj1, obj2))

@@ -28,7 +28,7 @@ namespace ArrivalPrediction
 		#endregion
 
 		#region Methods
-		public IEnumerable<ArrivalPrediction> GetAllArrivalPredictions()
+		public ICollection<ArrivalPrediction> GetAllArrivalPredictions()
 		{
 			string uri = string.Format(@"/Mode/tube/Arrivals?count=8&app_id={0}&app_key={1}",
 				this._TflConnectionSettings.AppId,
@@ -37,7 +37,7 @@ namespace ArrivalPrediction
 			string allArrivalPredictionText = HttpHelper.GetHttpsString(this._TflConnectionSettings.HttpsBaseAddress, uri);
 			
 			JArray arrivalPredictionArray = JArray.Parse(allArrivalPredictionText);
-			List<ArrivalPrediction> arrivalPredictionList = new List<ArrivalPrediction>(arrivalPredictionArray.Count);
+			HashSet<ArrivalPrediction> arrivalPredictionList = new HashSet<ArrivalPrediction>();
 			foreach (JToken item in arrivalPredictionArray)
 			{
 				ArrivalPrediction arrivalPrediction = new ArrivalPrediction();
@@ -58,6 +58,13 @@ namespace ArrivalPrediction
 					if (destinationStopPointId != null && ReferenceData.TryFindStopPoint(destinationStopPointId, out destinationStop))
 					{
 						arrivalPrediction.DestinationStopPoint = destinationStop;
+						foreach (Route candidateRoute in ReferenceData.AllRoutes.Where(r => r.Line == line))
+						{
+							if (candidateRoute.CanGoFromStopToStop(stop, destinationStop))
+							{
+								arrivalPrediction.Routes.Add(candidateRoute);
+							}
+						}
 					}
 					arrivalPredictionList.Add(arrivalPrediction);
 				}
