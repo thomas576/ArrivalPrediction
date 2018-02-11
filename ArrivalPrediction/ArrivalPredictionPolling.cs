@@ -13,7 +13,7 @@ namespace ArrivalPrediction
 	{
 		#region Private fields
 		private object _Lock = new object();
-		private readonly ITflConnectionSettings _TflConnectionSettings;
+		private readonly IArrivalPredictionDataMapper _ArrivalPredictionDataMapper;
 		private readonly int _PeriodInMilliseconds;
 		private readonly int _MinimumGapInMilliseconds;
 		private volatile bool _IsPollingActive;
@@ -21,7 +21,8 @@ namespace ArrivalPrediction
 
 		#region Properties
 		public ArrivalPredictionRepository ArrivalPredictionRepository { get; set; }
-		public int PeriodInMilliseconds {
+		public int PeriodInMilliseconds
+		{
 			get
 			{
 				return this._PeriodInMilliseconds;
@@ -37,10 +38,10 @@ namespace ArrivalPrediction
 		#endregion
 
 		#region Constructors
-		public ArrivalPredictionPolling(ITflConnectionSettings tflConnectionSettings, int periodInMilliseconds, int minimumGapInMilliseconds)
+		public ArrivalPredictionPolling(IArrivalPredictionDataMapper arrivalPredictionDataMapper, int periodInMilliseconds, int minimumGapInMilliseconds)
 		{
 			this.ArrivalPredictionRepository = new ArrivalPredictionRepository();
-			this._TflConnectionSettings = tflConnectionSettings;
+			this._ArrivalPredictionDataMapper = arrivalPredictionDataMapper;
 			this._PeriodInMilliseconds = periodInMilliseconds;
 			this._MinimumGapInMilliseconds = minimumGapInMilliseconds;
 		}
@@ -68,7 +69,7 @@ namespace ArrivalPrediction
 				lock (this._Lock)
 				{
 					Trace.TraceInformation(@"PollThreadSafe starting...");
-					HashSet<ArrivalPrediction> returnedArrivalPredictions = (HashSet<ArrivalPrediction>)new ArrivalPredictionDataMapper(this._TflConnectionSettings).GetAllArrivalPredictions();
+					HashSet<ArrivalPrediction> returnedArrivalPredictions = (HashSet<ArrivalPrediction>)this._ArrivalPredictionDataMapper.GetAllArrivalPredictions();
 					this.ArrivalPredictionRepository.AddArrivalPredictions(returnedArrivalPredictions);
 				}
 
@@ -91,13 +92,104 @@ namespace ArrivalPrediction
 			}
 		}
 
-		public IDictionary<DateTime, Image> ConvertToImagesThreadSafe(DateTime since)
+		public IDictionary<DateTime, Image> ConvertToImagesThreadSafe(Route route, DateTime since, int minutesBetweenStops, int pixelsPerMinute, int pixelsStopHeight, int minutesBeforeFirstStop, double gaussianStandardDeviation)
 		{
 			IDictionary<DateTime, Image> imageDictionary = new Dictionary<DateTime, Image>();
 
 			lock (this._Lock)
 			{
+				IList<StopPoint> stopPointsInOrder = route.GetStopPointsInOrder();
+				int imageWidth = (stopPointsInOrder.Count - 1) * minutesBetweenStops * pixelsPerMinute + minutesBeforeFirstStop * pixelsPerMinute;
+				int imageHeight = stopPointsInOrder.Count * pixelsStopHeight;
+				Trace.TraceInformation(@"Converting to an image, all images will be {0}x{1} pixels.", imageWidth, imageHeight);
 
+				foreach (var keyValue in this.ArrivalPredictionRepository.ArrivalPredictionsByTimeStamp)
+				{
+					if (keyValue.Key >= since)
+					{
+						DateTime currentImageDateTime = keyValue.Key;
+						Trace.TraceInformation(@"Converting to an image for timestamp = {0}.", currentImageDateTime);
+						ICollection<ArrivalPrediction> currentArrivalPredictions = keyValue.Value;
+						IEnumerable<ArrivalPrediction> arrivalPredictionsForRoute = currentArrivalPredictions.Where(a => (a.Routes.Contains(route)));
+						Trace.TraceInformation(@"Converting to an image, route contains {0} arrival predictions for this timestamp.", arrivalPredictionsForRoute.Count());
+
+						double[,] bitmapDouble = new double[imageWidth, imageHeight];
+						bool[,] bitmapBoolStop = new bool[imageWidth, imageHeight];
+						for (int s = 0; s < stopPointsInOrder.Count; s++)
+						{
+							StopPoint stop = stopPointsInOrder[s];
+							int yOffsetStopPoint = s * pixelsStopHeight;
+							int yMaxStopPoint = (s + 1) * pixelsStopHeight - 1;
+							int offsetInMinutesStopPoint = minutesBeforeFirstStop + s * minutesBetweenStops;
+							int xOffsetStopPoint = offsetInMinutesStopPoint * pixelsPerMinute;
+							IEnumerable<ArrivalPrediction> arrivalPredictionsForStop = arrivalPredictionsForRoute.Where(a => a.StopPoint == stop);
+							foreach (ArrivalPrediction arrivalPrediction in arrivalPredictionsForStop)
+							{
+								double timeToStationInMinutes = arrivalPrediction.TimeToStation / 60.0;
+								double gaussianMeanInMinutes = (double)offsetInMinutesStopPoint - timeToStationInMinutes;
+								GaussianDistribution gaussianDistribution = new GaussianDistribution(gaussianMeanInMinutes, gaussianStandardDeviation);
+								for (int x = 0; x < xOffsetStopPoint; x++)
+								{
+									double xInMinutes = (double)x / (double)pixelsPerMinute;
+									double gaussianValueAtX = gaussianDistribution.GetValue(xInMinutes);
+									for (int y = yOffsetStopPoint; y <= yMaxStopPoint; y++)
+									{
+										bitmapDouble[x, y] = bitmapDouble[x, y] + gaussianValueAtX;
+									}
+								}
+								for (int y = yOffsetStopPoint; y <= yMaxStopPoint; y++)
+								{
+									bitmapBoolStop[xOffsetStopPoint, y] = true;
+								}
+							}
+						}
+
+						double maxValue = 0;
+						for (int x = 0; x < imageWidth; x++)
+						{
+							for (int y = 0; y < imageHeight; y++)
+							{
+								if (bitmapDouble[x, y] > maxValue)
+								{
+									maxValue = bitmapDouble[x, y];
+								}
+							}
+						}
+
+						int[,] bitmapInt = new int[imageWidth, imageHeight];
+						double grayScaleFactor = (maxValue == 0.0) ? 0.0 : 255.0 / maxValue;
+						for (int x = 0; x < imageWidth; x++)
+						{
+							for (int y = 0; y < imageHeight; y++)
+							{
+								bitmapInt[x, y] = (int)Math.Round(bitmapDouble[x, y] * grayScaleFactor);
+							}
+						}
+
+						Stopwatch watch = new Stopwatch();
+						watch.Start();
+						Bitmap bitmap = new Bitmap(imageWidth, imageHeight);
+						for (int x = 0; x < imageWidth; x++)
+						{
+							for (int y = 0; y < imageHeight; y++)
+							{
+								Color pixelColor;
+								if (bitmapBoolStop[x, y])
+								{
+									pixelColor = Color.Yellow;
+								}
+								else
+								{
+									pixelColor = Color.FromArgb(bitmapInt[x, y], bitmapInt[x, y], bitmapInt[x, y]);
+								}
+								bitmap.SetPixel(x, y, pixelColor);
+							}
+						}
+						watch.Stop();
+						Trace.TraceInformation(@"Converting to an image, bitmap created in {0:#.###}s.", watch.ElapsedMilliseconds / 1000.0);
+						imageDictionary.Add(currentImageDateTime, bitmap);
+					}
+				}
 			}
 
 			return imageDictionary;

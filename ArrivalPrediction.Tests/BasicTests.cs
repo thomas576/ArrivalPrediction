@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
 using System.Threading;
+using System.Drawing;
 
 namespace ArrivalPrediction.Tests
 {
@@ -34,6 +35,22 @@ namespace ArrivalPrediction.Tests
 		}
 
 		[TestMethod]
+		public void TestReferenceData()
+		{
+			Line jubilee;
+			bool found = ReferenceData.TryFindLine(@"jubilee", out jubilee);
+			Assert.IsTrue(found);
+			Assert.IsTrue(jubilee.Name == @"Jubilee");
+			StopPoint canaryWharf = jubilee.StopPoints.Where(s => s.Name.Contains(@"Canary")).First(); // Canary Wharf security guards are a bunch of twats btw
+			Assert.IsTrue(canaryWharf.NextStopPoints.Values.Where(next => next.Name.Contains(@"Canada")).Count() > 0);
+			Route routeJubileeToStratford;
+			bool foundRoute = ReferenceData.TryFindRoute(@"jubilee", LineDirectionsEnum.JubileeStanmoreToStratford, out routeJubileeToStratford);
+			Assert.IsTrue(foundRoute);
+			StopPoint canadaWater = ReferenceData.AllStopPoints.Where(s => s.Value.Name.Contains(@"Canada Water")).First().Value;
+			Assert.IsTrue(routeJubileeToStratford.CanGoFromStopToStop(canadaWater, canaryWharf));
+		}
+
+		[TestMethod]
 		public void TestArrivalPredictionDownload()
 		{
 			TflConnectionSettings tflConnectionSettings = new TflConnectionSettings()
@@ -42,14 +59,17 @@ namespace ArrivalPrediction.Tests
 				AppKey = @"b07dcb8449db2934ff23297f4004b0e1",
 				HttpsBaseAddress = @"https://api.tfl.gov.uk/"
 			};
+			ICollection<ArrivalPrediction> returnedList = new ArrivalPredictionDataMapper(tflConnectionSettings).GetAllArrivalPredictions();
+
 			Line jubilee;
 			bool found = ReferenceData.TryFindLine(@"jubilee", out jubilee);
-			foreach (StopPoint s in jubilee.StopPoints)
+			IEnumerable<ArrivalPrediction> jubileePredictions = returnedList.Where(a => a.Line == jubilee);
+			IList<StopPoint> stopsFromStanmore = ReferenceData.FindRoute(@"jubilee", LineDirectionsEnum.JubileeStanmoreToStratford).GetStopPointsInOrder();
+			foreach (StopPoint stop in stopsFromStanmore)
 			{
-				Debug.WriteLine(s.Name);
+				IEnumerable<ArrivalPrediction> arrivalsForStop = jubileePredictions.Where(a => a.StopPoint == stop);
+				Trace.TraceInformation(@"There are {0} predictions for {1}", arrivalsForStop.Count(), stop.Name);
 			}
-			//IEnumerable<ArrivalPrediction> returnedList = new ArrivalPredictionDataMapper(tflConnectionSettings).GetAllArrivalPredictions();
-			//IEnumerable<ArrivalPrediction> jubileePredictions = returnedList.Where(ap => ap.LineId == @"jubilee").OrderBy(ap => ap.TimeToStation);
 		}
 
 		[TestMethod]
@@ -61,12 +81,24 @@ namespace ArrivalPrediction.Tests
 				AppKey = @"b07dcb8449db2934ff23297f4004b0e1",
 				HttpsBaseAddress = @"https://api.tfl.gov.uk/"
 			};
-			ArrivalPredictionPolling polling = new ArrivalPredictionPolling(tflConnectionSettings, 55000, 10000);
+			ArrivalPredictionDataMapper arrivalPredictionDataMapper = new ArrivalPredictionDataMapper(tflConnectionSettings);
+			ArrivalPredictionPolling polling = new ArrivalPredictionPolling(arrivalPredictionDataMapper, 55000, 10000);
 			polling.StartPollingInNewThread();
 			Thread.Sleep(240000);
 			polling.StopPollingThread();
 			Thread.Sleep(55000);
-			ArrivalPredictionRepository repo = polling.ArrivalPredictionRepository;
+			IDictionary<DateTime, Image> imageDictionary = polling.ConvertToImagesThreadSafe(
+				ReferenceData.FindRoute(@"jubilee", LineDirectionsEnum.JubileeStanmoreToStratford),
+				new DateTime(1900, 1, 1),
+				2,
+				20,
+				10,
+				5,
+				0.3);
+			foreach (var keyvalue in imageDictionary)
+			{
+				keyvalue.Value.Save(string.Format(@"C:\Users\Administrator\Desktop\bitmap_export\bmp_{0:yyyyMMdd_HHmmss}.bmp", keyvalue.Key));
+			}
 		}
 	}
 }

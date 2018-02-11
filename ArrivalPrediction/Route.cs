@@ -24,17 +24,51 @@ namespace ArrivalPrediction
 		#region Methods
 		public bool CanGoFromStopToStop(StopPoint stop1, StopPoint stop2)
 		{
-			IEnumerable<StopPointOrder> stopOrdersOnRoute = ReferenceData.AllStopPointOrders.Where(o => o.Route == this);
-			if (stopOrdersOnRoute.Count() > 0)
+			if (stop1 == stop2)
 			{
-				StopPointOrder stop1OrderFound = stopOrdersOnRoute.Where(o => o.StopPoint == stop1).FirstOrDefault();
-				StopPointOrder stop2OrderFound = stopOrdersOnRoute.Where(o => o.StopPoint == stop2).FirstOrDefault();
-				if (stop1OrderFound != null && stop2OrderFound != null && stop1OrderFound.ZeroBasedOrder < stop2OrderFound.ZeroBasedOrder)
+				Trace.TraceError(@"Route cannot determine if it can go from stop1 to stop2 if both are the same and equal to {0}", stop1.Name);
+			}
+			else
+			{
+				IEnumerable<StopPointOrder> stopOrdersOnRoute = ReferenceData.AllStopPointOrders.Where(o => o.Route == this);
+				if (stopOrdersOnRoute.Count() > 0)
 				{
-					return true;
+					StopPointOrder stop1OrderFound = stopOrdersOnRoute.Where(o => o.StopPoint == stop1).FirstOrDefault();
+					StopPointOrder stop2OrderFound = stopOrdersOnRoute.Where(o => o.StopPoint == stop2).FirstOrDefault();
+					if (stop1OrderFound != null && stop2OrderFound != null && stop1OrderFound.ZeroBasedOrder < stop2OrderFound.ZeroBasedOrder)
+					{
+						return true;
+					}
 				}
 			}
 			return false;
+		}
+
+		public StopPoint GetTerminatingStop()
+		{
+			StopPoint terminatingStop = null;
+			IEnumerable<StopPointOrder> stopOrdersOnRoute = ReferenceData.AllStopPointOrders.Where(o => o.Route == this);
+			int countStopOrdersOnroute = stopOrdersOnRoute.Count();
+			if (countStopOrdersOnroute > 0)
+			{
+				terminatingStop = stopOrdersOnRoute.Where(o => o.ZeroBasedOrder == (countStopOrdersOnroute - 1)).First().StopPoint;
+			}
+			else
+			{
+				Trace.TraceError(@"No stops defined on route ({0}, {1})", (this.Line == null) ? @"null" : this.Line.Name, this.LineDirection);
+			}
+			return terminatingStop;
+		}
+
+		public IList<StopPoint> GetStopPointsInOrder()
+		{
+			IList<StopPoint> stopPointsInOrder = new List<StopPoint>();
+			IEnumerable<StopPointOrder> stopOrdersOnRoute = ReferenceData.AllStopPointOrders.Where(o => o.Route == this).OrderBy(s => s.ZeroBasedOrder);
+			foreach (StopPointOrder order in stopOrdersOnRoute)
+			{
+				stopPointsInOrder.Add(order.StopPoint);
+			}
+			return stopPointsInOrder;
 		}
 
 		public static bool operator ==(Route obj1, Route obj2)
