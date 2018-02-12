@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,6 +34,7 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\ThirdpartyLibraries\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -49,9 +51,14 @@
     <Compile Include="ArrivalPredictionDataMapper.cs" />
     <Compile Include="ArrivalPredictionPolling.cs" />
     <Compile Include="ArrivalPredictionRepository.cs" />
+    <Compile Include="ColorHelper.cs" />
     <Compile Include="GaussianDistribution.cs" />
+    <Compile Include="HLColor.cs" />
+    <Compile Include="HSLColor.cs" />
+    <Compile Include="HSLColorConversion.cs" />
     <Compile Include="HttpHelper.cs" />
     <Compile Include="IArrivalPredictionDataMapper.cs" />
+    <Compile Include="IColorScaleable.cs" />
     <Compile Include="IReferenceData.cs" />
     <Compile Include="ITflConnectionSettings.cs" />
     <Compile Include="Line.cs" />

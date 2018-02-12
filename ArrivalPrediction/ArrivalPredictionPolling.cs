@@ -139,7 +139,10 @@ namespace ArrivalPrediction
 								}
 								for (int y = yOffsetStopPoint; y <= yMaxStopPoint; y++)
 								{
-									bitmapBoolStop[xOffsetStopPoint, y] = true;
+									if (xOffsetStopPoint < imageWidth)
+									{
+										bitmapBoolStop[xOffsetStopPoint, y] = true;
+									}
 								}
 							}
 						}
@@ -183,6 +186,103 @@ namespace ArrivalPrediction
 									pixelColor = Color.FromArgb(bitmapInt[x, y], bitmapInt[x, y], bitmapInt[x, y]);
 								}
 								bitmap.SetPixel(x, y, pixelColor);
+							}
+						}
+						watch.Stop();
+						Trace.TraceInformation(@"Converting to an image, bitmap created in {0:#.###}s.", watch.ElapsedMilliseconds / 1000.0);
+						imageDictionary.Add(currentImageDateTime, bitmap);
+					}
+				}
+			}
+
+			return imageDictionary;
+		}
+
+		public IDictionary<DateTime, Image> ConvertToImagesWithColorThreadSafe(Route route, DateTime since, int minutesBetweenStops, int pixelsPerMinute, int pixelsStopHeight, int minutesBeforeFirstStop, double gaussianStandardDeviation)
+		{
+			IDictionary<DateTime, Image> imageDictionary = new Dictionary<DateTime, Image>();
+
+			lock (this._Lock)
+			{
+				IList<StopPoint> stopPointsInOrder = route.GetStopPointsInOrder();
+				int imageWidth = (stopPointsInOrder.Count - 1) * minutesBetweenStops * pixelsPerMinute + minutesBeforeFirstStop * pixelsPerMinute;
+				int imageHeight = stopPointsInOrder.Count * pixelsStopHeight;
+				Trace.TraceInformation(@"Converting to an image, all images will be {0}x{1} pixels.", imageWidth, imageHeight);
+
+				foreach (var keyValue in this.ArrivalPredictionRepository.ArrivalPredictionsByTimeStamp)
+				{
+					if (keyValue.Key >= since)
+					{
+						DateTime currentImageDateTime = keyValue.Key;
+						Trace.TraceInformation(@"Converting to an image for timestamp = {0}.", currentImageDateTime);
+						ICollection<ArrivalPrediction> currentArrivalPredictions = keyValue.Value;
+						IEnumerable<ArrivalPrediction> arrivalPredictionsForRoute = currentArrivalPredictions.Where(a => (a.Routes.Contains(route)));
+						Trace.TraceInformation(@"Converting to an image, route contains {0} arrival predictions for this timestamp.", arrivalPredictionsForRoute.Count());
+
+						IColorScaleable[,] bitmapColors = new IColorScaleable[imageWidth, imageHeight];
+						for (int s = 0; s < stopPointsInOrder.Count; s++)
+						{
+							StopPoint stop = stopPointsInOrder[s];
+							int yOffsetStopPoint = s * pixelsStopHeight;
+							int yMaxStopPoint = (s + 1) * pixelsStopHeight - 1;
+							int offsetInMinutesStopPoint = minutesBeforeFirstStop + s * minutesBetweenStops;
+							int xOffsetStopPoint = offsetInMinutesStopPoint * pixelsPerMinute;
+							IEnumerable<ArrivalPrediction> arrivalPredictionsForStop = arrivalPredictionsForRoute.Where(a => a.StopPoint == stop);
+							foreach (ArrivalPrediction arrivalPrediction in arrivalPredictionsForStop)
+							{
+								double timeToStationInMinutes = arrivalPrediction.TimeToStation / 60.0;
+								double gaussianMeanInMinutes = (double)offsetInMinutesStopPoint - timeToStationInMinutes;
+								GaussianDistribution gaussianDistribution = new GaussianDistribution(gaussianMeanInMinutes, gaussianStandardDeviation);
+								int vehicleIdHashCode = Math.Abs((string.IsNullOrEmpty(arrivalPrediction.VehicleId)) ? 0 : arrivalPrediction.VehicleId.GetHashCode());
+								double vehicleIdDouble = (vehicleIdHashCode % 256) / 255.0;
+								for (int x = 0; x < xOffsetStopPoint; x++)
+								{
+									double xInMinutes = (double)x / (double)pixelsPerMinute;
+									double gaussianValueAtX = gaussianDistribution.GetValue(xInMinutes);
+									for (int y = yOffsetStopPoint; y <= yMaxStopPoint; y++)
+									{
+										if (bitmapColors[x, y] == null)
+										{
+											bitmapColors[x, y] = new HLColor(vehicleIdDouble, gaussianValueAtX);
+										}
+										else
+										{
+											bitmapColors[x, y] = bitmapColors[x, y].AddTo(new HLColor(vehicleIdDouble, gaussianValueAtX));
+										}
+									}
+								}
+							}
+							for (int y = yOffsetStopPoint; y <= yMaxStopPoint; y++)
+							{
+								if (xOffsetStopPoint < imageWidth)
+								{
+									bitmapColors[xOffsetStopPoint, y] = new HSLColor(0.0, 1.0, 1.0);
+								}
+							}
+						}
+
+						double maxLuminosityRawValue = 0;
+						for (int x = 0; x < imageWidth; x++)
+						{
+							for (int y = 0; y < imageHeight; y++)
+							{
+								HLColor hlColor = bitmapColors[x, y] as HLColor;
+								if (hlColor != null && hlColor.LuminosityRawValue > maxLuminosityRawValue)
+								{
+									maxLuminosityRawValue = hlColor.LuminosityRawValue;
+								}
+							}
+						}
+
+						Stopwatch watch = new Stopwatch();
+						watch.Start();
+						Bitmap bitmap = new Bitmap(imageWidth, imageHeight);
+						for (int x = 0; x < imageWidth; x++)
+						{
+							for (int y = 0; y < imageHeight; y++)
+							{
+								Color color = (bitmapColors[x, y] == null) ? Color.Black : bitmapColors[x, y].GetWinformsColor(maxLuminosityRawValue);
+								bitmap.SetPixel(x, y, color);
 							}
 						}
 						watch.Stop();

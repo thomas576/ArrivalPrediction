@@ -64,7 +64,7 @@ namespace ArrivalPrediction.UI
 		private void buttonPlay_Click(object sender, EventArgs e)
 		{
 			this.buttonPlay.Enabled = false;
-			IDictionary<DateTime, Image> imageDictionary = this._ArrivalPredictionPolling.ConvertToImagesThreadSafe(
+			IDictionary<DateTime, Image> imageDictionary = this._ArrivalPredictionPolling.ConvertToImagesWithColorThreadSafe(
 				ReferenceData.FindRoute(@"jubilee", LineDirectionsEnum.JubileeStanmoreToStratford),
 				new DateTime(1900, 1, 1),
 				2,
@@ -93,7 +93,7 @@ namespace ArrivalPrediction.UI
 					this.pictureBox1.Image = imageDictionary[dateTime];
 					this.labelInfo.Text = string.Format(@"Displaying image for {0}", dateTime.ToLongTimeString());
 					Application.DoEvents();
-					Thread.Sleep(75);
+					Thread.Sleep(400);
 					i++;
 				}
 			}
